@@ -1,0 +1,36 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom scrollbar for webkit-baserte nettlesere (Chromium, Firefox vil revertere til globale scrollbars. */
+::-webkit-scrollbar {
+    width: 12px;
+}
+
+::-webkit-scrollbar-track {
+    background: rgb(243 244 246);
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgb(209 213 219);
+    border-radius: 6px;
+    border: 2px solid rgb(243 244 246);
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgb(156 163 175);
+}
+
+/* Dark mode */
+.dark ::-webkit-scrollbar-track {
+    background: rgb(31 41 55);
+}
+
+.dark ::-webkit-scrollbar-thumb {
+    background: rgb(55 65 81);
+    border-color: rgb(31 41 55);
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+    background: rgb(75 85 99);
+}
