@@ -37,19 +37,33 @@ _Landlosen_ is Norwegian and is put together from two words, "land" and "los". "
 ## How to run
 
 ### Manually
-1. First do:
+1. From your wanted folder to run it from, open a terminal and enter:
     ```terminal
-    gh clone repo
+    git clone https://github.com/Scandiking/Landlosen
     ```
-2. Then do:
-    ```terminal
-    npm run dev
-    ```
-### Using the provided `.bat`-file
+2. Then unzip the folder to wanted location.
 
-1. Instructions
-2. Instructions
-3. Instructions
+3. `cd` to that location. Example:
+    ```terminal
+   cd C:/Users/YourName/ThisDownload
+    ```
+   
+4. If the terminal now says something like
+    ```terminal
+    C:/Users/YourName/ThisDownload>
+    ```
+
+5. Then you can write
+    ```terminal
+   npm run dev
+    ```
+6. And now it should open in your standard browser.
+
+If you are not used to using the terminal, you can do it the point-and-click-way:
+### Using the provided `.bat`-file
+1. Download the `.zip` directly from [here](https://github.com/Scandiking/Landlosen/archive/refs/heads/master.zip) or click the green Code-button on [this page](https://github.com/Scandiking/Landlosen#) and click `Download ZIP` in the dropdown menu.
+2. Download and unzip it to wanted location.
+2. Double-click the `RUN_ME.bat` file.
 
 ## Extra features
 - Søke etter land i søkeboks
