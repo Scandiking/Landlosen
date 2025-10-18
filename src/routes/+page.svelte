@@ -1,23 +1,18 @@
 <script>
-    import { onMount } from 'svelte';
+    import { onMount, getContext } from 'svelte';
     import { getAllCountries } from '$lib/api/countries';
+    import { countryTranslations } from '$lib/translations/countries';
 
-    /** @type {any[]} */
+    const searchTerm = getContext('searchTerm');
+    const lang = getContext('lang');
+
     let countries = [];
-    /** @type {any[]} */
     let filteredCountries = [];
     let loading = true;
-    /** @type {string | null} */
     let error = null;
 
-    // Paginering
     let currentPage = 1;
     let itemsPerPage = 20;
-
-    // Søk og filter
-    let searchTerm = '';
-    let minPopulation = 0;
-    let maxPopulation = 2000000000;
 
     $: totalPages = Math.ceil(filteredCountries.length / itemsPerPage);
     $: paginatedCountries = filteredCountries.slice(
@@ -36,80 +31,55 @@
         }
     });
 
-    function filterCountries() {
+    function getCountryName(country) {
+        if ($lang === 'no') {
+            if (country.translations?.nob?.common) {
+                return country.translations.nob.common;
+            }
+            if (countryTranslations[country.name.common]) {
+                return countryTranslations[country.name.common];
+            }
+        }
+        return country.name.common;
+    }
+
+    $: {
         filteredCountries = countries.filter(country => {
-            const matchesSearch = country.name.common
+            const countryName = getCountryName(country);
+            return countryName
                 .toLowerCase()
-                .includes(searchTerm.toLowerCase());
-            const population = country.population || 0;
-            const matchesPopulation = population >= minPopulation && population <= maxPopulation;
-            return matchesSearch && matchesPopulation;
+                .includes($searchTerm.toLowerCase());
         });
         currentPage = 1;
     }
 
-    /**
-     * @param {number} page
-     */
     function changePage(page) {
         if (page >= 1 && page <= totalPages) {
             currentPage = page;
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
     }
-
-    $: {
-        searchTerm;
-        minPopulation;
-        maxPopulation;
-        filterCountries();
-    }
 </script>
 
 <div class="container">
-
     {#if loading}
-        <p>Laster land...</p>
+        <p>{$lang === 'no' ? 'Laster land...' : 'Loading countries...'}</p>
     {:else if error}
-        <p class="error">Feil: {error}</p>
+        <p class="error">{$lang === 'no' ? 'Feil' : 'Error'}: {error}</p>
     {:else}
-        <div class="filters">
-            <input
-                    type="text"
-                    placeholder="Søk etter land..."
-                    bind:value={searchTerm}
-            />
-
-            <div class="population-filter">
-                <label>
-                    Min befolkning:
-                    <input
-                            type="number"
-                            bind:value={minPopulation}
-                            min="0"
-                    />
-                </label>
-                <label>
-                    Max befolkning:
-                    <input
-                            type="number"
-                            bind:value={maxPopulation}
-                            min="0"
-                    />
-                </label>
-            </div>
-        </div>
-
         <p class="results-info">
-            Viser {filteredCountries.length} land (side {currentPage} av {totalPages})
+            {$lang === 'no'
+                ? `Viser ${filteredCountries.length} land (side ${currentPage} av ${totalPages})`
+                : `Showing ${filteredCountries.length} countries (page ${currentPage} of ${totalPages})`
+            }
         </p>
 
         <div class="country-grid">
             {#each paginatedCountries as country}
                 <a href="/land/{country.cca3}" class="country-card">
-                    <img src={country.flags.svg} alt="{country.name.common} flagg" />
-                    <h3>{country.name.common}</h3>
-                    <p>👥 {country.population?.toLocaleString('nb-NO') || 'Ukjent'}</p>
+                    <img src={country.flags.svg} alt="{getCountryName(country)} flagg" />
+                    <h3>{getCountryName(country)}</h3>
+                    <p>👥 {country.population?.toLocaleString($lang === 'no' ? 'nb-NO' : 'en-US') || ($lang === 'no' ? 'Ukjent' : 'Unknown')}</p>
                     <p>🌍 {country.region}</p>
                 </a>
             {/each}
@@ -120,7 +90,7 @@
                     on:click={() => changePage(currentPage - 1)}
                     disabled={currentPage === 1}
             >
-                ← Forrige
+                {$lang === 'no' ? '←' : '←'}
             </button>
 
             {#each Array(totalPages) as _, i}
@@ -140,7 +110,7 @@
                     on:click={() => changePage(currentPage + 1)}
                     disabled={currentPage === totalPages}
             >
-                Neste →
+                {$lang === 'no' ? '→' : '→'}
             </button>
         </div>
     {/if}
@@ -148,109 +118,126 @@
 
 <style>
     .container {
-        max-width: 1200px;
+        max-width: 1400px;
         margin: 0 auto;
         padding: 2rem;
     }
 
-    h1 {
-        text-align: center;
-        margin-bottom: 2rem;
-    }
-
-    .filters {
-        margin-bottom: 2rem;
-    }
-
-    .filters input[type="text"] {
-        width: 100%;
-        padding: 0.75rem;
-        font-size: 1rem;
-        margin-bottom: 1rem;
-        box-sizing: border-box;
-    }
-
-    .population-filter {
-        display: flex;
-        gap: 1rem;
-    }
-
-    .population-filter label {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-    }
-
-    .population-filter input {
-        width: 100%;
-        padding: 0.5rem;
-        margin-top: 0.25rem;
-        box-sizing: border-box;
-    }
-
     .results-info {
         text-align: center;
-        margin-bottom: 1rem;
-        color: #666;
+        margin-bottom: 2rem;
+        color: #6b7280;
+        font-size: 1.125rem;
+    }
+
+    :global(.dark) .results-info {
+        color: #9ca3af;
     }
 
     .country-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
         gap: 1.5rem;
-        margin-bottom: 2rem;
+        margin-bottom: 3rem;
     }
 
     .country-card {
-        border: 1px solid #ddd;
-        border-radius: 8px;
-        padding: 1rem;
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
         text-decoration: none;
-        color: inherit;
         transition: transform 0.2s, box-shadow 0.2s;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        border: 1px solid #e5e7eb;
+    }
+
+    :global(.dark) .country-card {
+        background: #1f2937;
+        border-color: #374151;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
     }
 
     .country-card:hover {
         transform: translateY(-4px);
-        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+    }
+
+    :global(.dark) .country-card:hover {
+        border-color: #93c5fd;
+        box-shadow: 0 8px 8px rgba(50,50,50,0.5);
     }
 
     .country-card img {
         width: 100%;
-        height: 150px;
+        height: 180px;
         object-fit: cover;
-        border-radius: 4px;
-        margin-bottom: 0.5rem;
+        border-radius: 8px;
+        margin-bottom: 1rem;
     }
 
     .country-card h3 {
-        margin: 0.5rem 0;
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin-bottom: 0.75rem;
+        color: #111827;
+    }
+
+    :global(.dark) .country-card h3 {
+        color: #f3f4f6;
     }
 
     .country-card p {
+        color: #6b7280;
         margin: 0.25rem 0;
-        font-size: 0.9rem;
-        color: #666;
+    }
+
+    :global(.dark) .country-card p {
+        color: #9ca3af;
     }
 
     .pagination {
         display: flex;
         justify-content: center;
+        align-items: center;
         gap: 0.5rem;
         flex-wrap: wrap;
-        align-items: center;
     }
 
     .pagination button {
         padding: 0.5rem 1rem;
-        border: 1px solid #ddd;
+        border: 1px solid #d1d5db;
         background: white;
+        color: #374151;
+        border-radius: 6px;
         cursor: pointer;
-        border-radius: 4px;
+        transition: all 0.2s;
+    }
+
+    :global(.dark) .pagination button {
+        background: #1f2937;
+        border-color: #374151;
+        color: #e5e7eb;
     }
 
     .pagination button:hover:not(:disabled) {
-        background: #f0f0f0;
+        background: #f3f4f6;
+        border-color: #9ca3af;
+    }
+
+    :global(.dark) .pagination button:hover:not(:disabled) {
+        background: #374151;
+        border-color: #4b5563;
+    }
+
+    .pagination button.active {
+        background: #3b82f6;
+        color: white;
+        border-color: #3b82f6;
+    }
+
+    :global(.dark) .pagination button.active {
+        background: #2563eb;
+        border-color: #2563eb;
     }
 
     .pagination button:disabled {
@@ -258,18 +245,23 @@
         cursor: not-allowed;
     }
 
-    .pagination button.active {
-        background: #007bff;
-        color: white;
-        border-color: #007bff;
+    .pagination span {
+        color: #6b7280;
+        padding: 0 0.5rem;
     }
 
-    .pagination span {
-        padding: 0.5rem;
+    :global(.dark) .pagination span {
+        color: #9ca3af;
     }
 
     .error {
-        color: red;
+        color: #ef4444;
         text-align: center;
+        padding: 2rem;
+    }
+
+    :global(.dark) .error {
+        color: #f87171;
     }
 </style>
+

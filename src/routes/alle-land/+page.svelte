@@ -3,6 +3,7 @@
     import { getAllCountries } from '$lib/api/countries';
     import { Card, Input, Select, Button, Pagination } from 'flowbite-svelte';
     import { SearchOutline } from 'flowbite-svelte-icons';
+    import { getContext } from 'svelte';
 
     /** @type {any[]} */
     let countries = [];
@@ -15,6 +16,18 @@
     let itemsPerPage = 20;
     let sortBy = 'name';
     let sortOrder = 'asc';
+
+    let itemsPerPageOptions = [
+        {value: 10, name: '10 per side' },
+        {value: 20, name: '20 per side' },
+        {value: 50, name: '50 per side' },
+        {value: 100, name: '100 per side' },
+    ];
+
+
+    $: if (itemsPerPage) {
+        currentPage = 1;
+    }
 
     $: filteredCountries = countries.filter(country =>
         country.name.common.toLowerCase().includes(searchTerm.toLowerCase())
@@ -52,19 +65,20 @@
         }
     });
 
+    $: pages = Array.from({length: totalPages }, (_, i) => ({
+        name: (i + 1).toString(),
+        active: i + 1 === currentPage
+    }));
+
     $: totalPages = Math.ceil(sortedCountries.length / itemsPerPage);
+
     $: paginatedCountries = sortedCountries.slice(
         (currentPage - 1) * itemsPerPage,
         currentPage * itemsPerPage
     );
 
-    $: {
-        searchTerm;
-        sortBy;
-        sortOrder;
-        itemsPerPage;
-        currentPage = 1;
-    }
+    $: if (itemsPerPage) currentPage = 1;
+    $: if (searchTerm || sortBy || sortOrder) currentPage = 1;
 
     onMount(async () => {
         try {
@@ -76,6 +90,8 @@
             loading = false;
         }
     });
+
+    const lang = getContext('lang');
 
     const previous = () => {
         if (currentPage > 1) {
@@ -107,16 +123,23 @@
         { value: 10, name: '10 per side' },
         { value: 20, name: '20 per side' },
         { value: 50, name: '50 per side' },
-        { value: 100, name: '100 per side' }
+        { value: 100, name: '100 per side' },
+        { value: 220, name: 'Alle land på én side' },
     ];
+
+    function changePage(page) {
+        if (page >= 1 && page <= totalPages) {
+            currentPage = page;
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    }
 </script>
 
-<!-- Wikipedia-style layout -->
+
 <div class="max-w-screen-2xl mx-auto px-4 py-6">
     <!-- Header -->
-    <div class="mb-8 text-center">
-        <h1 class="text-4xl font-bold text-gray-900 dark:text-white mb-2">📋 Alle land</h1>
-        <p class="text-gray-600 dark:text-gray-400">Komplett liste over alle selvstendige land</p>
+    <div class="mb-8 text-left">
+        <h1 class="text-4xl font-bold text-gray-900 dark:text-white mb-2">Alle land</h1>
     </div>
 
     {#if loading}
@@ -196,28 +219,39 @@
                 </div>
 
                 <!-- Pagination -->
-                {#if totalPages > 1}
-                    <div class="flex justify-center">
-                        <Pagination
-                                pages={Array.from({ length: totalPages }, (_, i) => ({
-                                name: (i + 1).toString(),
-                                href: '#',
-                                active: i + 1 === currentPage
-                            }))}
-                                on:previous={previous}
-                                on:next={next}
-                                on:click={(e) => {
-                                currentPage = parseInt(e.detail.name);
-                                window.scrollTo({ top: 0, behavior: 'smooth' });
-                            }}
-                        />
-                    </div>
-                {/if}
+                <div class="pagination">
+                    <button
+                            on:click={() => changePage(currentPage - 1)}
+                            disabled={currentPage === 1}
+                    >
+                        {$lang === 'no' ? '←' : '←'}
+                    </button>
+
+                    {#each Array(totalPages) as _, i}
+                        {#if i + 1 === 1 || i + 1 === totalPages || Math.abs(i + 1 - currentPage) <= 2}
+                            <button
+                                    class:active={currentPage === i + 1}
+                                    on:click={() => changePage(i + 1)}
+                            >
+                                {i + 1}
+                            </button>
+                        {:else if i + 1 === currentPage - 3 || i + 1 === currentPage + 3}
+                            <span>...</span>
+                        {/if}
+                    {/each}
+
+                    <button
+                            on:click={() => changePage(currentPage + 1)}
+                            disabled={currentPage === totalPages}
+                    >
+                        {$lang === 'no' ? '→' : '→'}
+                    </button>
+                </div>
             </main>
 
             <!-- SIDEBAR - Search and Filters (like Wikipedia infobox) -->
             <aside class="lg:order-last">
-                <div class="lg:sticky lg:top-0">
+                <div class="lg:sticky lg:top-20 p-1">
                     <Card class="bg-gray-50 dark:bg-gray-800">
                         <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 pb-2 border-b border-gray-200 dark:border-gray-700">
                             Søk og filtrer
@@ -269,3 +303,66 @@
         </div>
     {/if}
 </div>
+
+<style>
+    .pagination {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        margin-top: 2rem;
+    }
+
+    .pagination button {
+        padding: 0.5rem 1rem;
+        border: 1px solid #d1d5db;
+        background: white;
+        color: #374151;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    :global(.dark) .pagination button {
+        background: #1f2937;
+        border-color: #374151;
+        color: #e5e7eb;
+    }
+
+    .pagination button:hover:not(:disabled) {
+        background: #f3f4f6;
+        border-color: #9ca3af;
+    }
+
+    :global(.dark) .pagination button:hover:not(:disabled) {
+        background: #374151;
+        border-color: #4b5563;
+    }
+
+    .pagination button.active {
+        background: #3b82f6;
+        color: white;
+        border-color: #3b82f6;
+    }
+
+    :global(.dark) .pagination button.active {
+        background: #2563eb;
+        border-color: #2563eb;
+    }
+
+    .pagination button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    .pagination span {
+        color: #6b7280;
+        padding: 0 0.5rem;
+    }
+
+    :global(.dark) .pagination span {
+        color: #9ca3af;
+    }
+
+</style>
