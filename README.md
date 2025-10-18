@@ -68,16 +68,21 @@ _Landlosen_ is Norwegian and is put together from two words, "land" and "los". "
 ## Screenshots
 
 ![](./static/Landing_light.png)
-Landing page with countries retrieved from [RestCountries](https://restcountries.com)' all endpoint in light mode.  
+Landing page with countries retrieved from [RestCountries](https://restcountries.com)' all endpoint in light mode.
+  
 ![](./static/Country_light.png)
 The page for retrieving information for a single country in light theme.
+  
 ![](./static/AllCountries_Light.png)
 The page for listing all countries, and the option to sort by name, population, area, and region in light mode.
-
+  
 ![](./static/Landing_dark.png)
 Landing page with countries retrieved from [RestCountries](https://restcountries.com)' all endpoint in dark mode.
+  
 ![](./static/Country_dark.png)
 The page for retrieving information for a single country in dark theme.
+  
 ![](./static/AllCountries_dark.png)
 The page for listing all countries, and the option to sort by name, population, area, and region in dark mode.
+  
 
