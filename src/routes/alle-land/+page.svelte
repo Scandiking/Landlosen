@@ -1,6 +1,6 @@
 <script>
     import { onMount } from 'svelte';
-    import { getAllCountries } from '$lib/api/countries';
+    import { getAllCountries } from '$lib/api/countries.js';
     import { Card, Input, Select, Button, Pagination } from 'flowbite-svelte';
     import { SearchOutline } from 'flowbite-svelte-icons';
     import { getContext } from 'svelte';
@@ -16,6 +16,8 @@
     let itemsPerPage = 20;
     let sortBy = 'name';
     let sortOrder = 'asc';
+
+    let showFilters = false;
 
     let itemsPerPageOptions = [
         {value: 10, name: '10 per side' },
@@ -156,7 +158,7 @@
         <div class="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-2">
 
             <!-- MAIN SECTION - Country List (like Wikipedia article content) -->
-            <main class="min-w-0">
+            <main class="min-w-0 pb-10 lg:pb-0">
                 <!-- Stats -->
                 <div class="mb-4">
                     <span class="text-2xl font-semibold text-gray-900 dark:text-white">
@@ -249,11 +251,31 @@
                 </div>
             </main>
 
-            <!-- SIDEBAR - Search and Filters (like Wikipedia infobox) -->
+            <!-- SIDEBAR - Search and Filters -->
             <aside class="lg:order-last">
-                <div class="lg:sticky lg:top-20 p-1">
-                    <Card class="bg-gray-50 dark:bg-gray-800">
-                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 pb-2 border-b border-gray-200 dark:border-gray-700">
+                <!-- Mobile Filter toggle button, sticky to bottom -->
+                <button
+                        class="lg:hidden fixed bottom-0 left-0 right-0 z-40 px-4 py-3 bg-white dark:bg-gray-900 text-gray-900 dark:text-white font-medium flex items-center justify-between shadow-md border-t border-gray-200 dark:border-gray-700"
+                        on:click={() => showFilters = !showFilters}
+                >
+                    <span>Søk og filtrer</span>
+                    <span class="text-xl">{showFilters ? '−' : '+'}</span>
+                </button>
+
+                <!-- Filter card, slides up from bottom when open -->
+                <div
+                        class="lg:sticky lg:top-20 p-1"
+                        class:fixed={showFilters}
+                        class:bottom-14={showFilters}
+                        class:left-0={showFilters}
+                        class:right-0={showFilters}
+                        class:z-40={showFilters}
+                        class:hidden={!showFilters}
+                        class:lg:block={true}
+                >
+                    <Card class="bg-gray-50 dark:bg-gray-800" style="box-shadow: 0 0 35px rgba(0,0,0,0.25);">
+                        <div class="max-h-[70vh] overflow-y-auto">
+                        <h3 class="hidden lg:block text-lg font-semibold text-gray-900 dark:text-white mb-4 pb-2 border-b border-gray-200 dark:border-gray-700">
                             Søk og filtrer
                         </h3>
 
@@ -273,33 +295,39 @@
                                 </Input>
                             </div>
 
-                            <!-- Sort By -->
-                            <div>
-                                <label for="sortBy" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
-                                    Sorter etter
-                                </label>
-                                <Select id="sortBy" items={sortOptions} bind:value={sortBy} size="sm" />
-                            </div>
+                            <!-- Filters in responsive grid -->
+                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-4">
+                                <!-- Sort By -->
+                                <div>
+                                    <label for="sortBy" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                                        Sorter etter
+                                    </label>
+                                    <Select id="sortBy" items={sortOptions} bind:value={sortBy} size="sm" />
+                                </div>
 
-                            <!-- Sort Order -->
-                            <div>
-                                <label for="sortOrder" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
-                                    Rekkefølge
-                                </label>
-                                <Select id="sortOrder" items={orderOptions} bind:value={sortOrder} size="sm" />
-                            </div>
+                                <!-- Sort Order -->
+                                <div>
+                                    <label for="sortOrder" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                                        Rekkefølge
+                                    </label>
+                                    <Select id="sortOrder" items={orderOptions} bind:value={sortOrder} size="sm" />
+                                </div>
 
-                            <!-- Items Per Page -->
-                            <div>
-                                <label for="perPage" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
-                                    Vis per side
-                                </label>
-                                <Select id="perPage" items={perPageOptions} bind:value={itemsPerPage} size="sm" />
+                                <!-- Items Per Page -->
+                                <div>
+                                    <label for="perPage" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                                        Vis per side
+                                    </label>
+                                    <Select id="perPage" items={perPageOptions} bind:value={itemsPerPage} size="sm" />
+                                </div>
                             </div>
+                        </div>
                         </div>
                     </Card>
                 </div>
             </aside>
+
+
         </div>
     {/if}
 </div>

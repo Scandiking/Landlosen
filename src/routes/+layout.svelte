@@ -68,11 +68,12 @@
 </script>
 
 <div class="min-h-screen bg-gray-50 dark:bg-gray-900">
-    <nav class="sticky top-0 bg-white border-gray-200 dark:bg-gray-900 border-b dark:border-gray-700 relative z-30">
+    <nav class="sticky top-0 bg-white border-gray-200 dark:bg-gray-900 border-b dark:border-gray-700 relative z-30 shadow-lg">
         <div class="flex items-center justify-between gap-4 px-4 py-3">
             <div class="flex items-center gap-2">
                 <button
                         on:click={toggleDrawer}
+                        aria-label="Open menu"
                         class="inline-flex items-center p-2 text-sm text-gray-500 rounded-lg md:hidden hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:text-gray-400 dark:hover:bg-gray-700 dark:focus:ring-gray-600"
                 >
                     <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
@@ -156,6 +157,7 @@
     {#if drawerOpen}
         <button
                 on:click={closeDrawer}
+                aria-label="Close drawer"
                 class="fixed inset-0 bg-gray-900 bg-opacity-50 z-40"
                 transition:fly={{ duration: 200 }}
         ></button>
@@ -171,6 +173,7 @@
                     </h5>
                     <button
                             on:click={closeDrawer}
+                            aria-label="Close drawer"
                             class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 dark:hover:bg-gray-600 dark:hover:text-white"
                     >
                         <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">

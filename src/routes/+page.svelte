@@ -1,6 +1,6 @@
 <script>
     import { onMount, getContext } from 'svelte';
-    import { getAllCountries } from '$lib/api/countries';
+    import { getAllCountries } from '$lib/api/countries.js';
     import { countryTranslations } from '$lib/translations/countries';
 
     const searchTerm = getContext('searchTerm');
