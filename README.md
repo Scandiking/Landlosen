@@ -1,6 +1,7 @@
 # Landlosen
 
 ![Jorda](./static/Jorda_1000samples.png)
+###### Image credits:  
 [Texture image](https://visibleearth.nasa.gov/images/74518/december-blue-marble-next-generation-w-topography/74520l): _Reto Stöckli, NASA Earth Observatory_  
 [Normal map image](https://visibleearth.nasa.gov/images/73934/topography/84331l): _Imagery by Jesse Allen, NASA's Earth Observatory, using data from the General Bathymetric Chart of the Oceans (GEBCO) produced by the British Oceanographic Data Centre_  
 
@@ -16,6 +17,7 @@ _Landlosen_ is Norwegian and is put together from two words, "land" and "los". "
 ## Table of Contents
 <!-- TOC -->
 * [Landlosen](#landlosen)
+          * [Image credits:](#image-credits-)
   * [What is this](#what-is-this)
   * [What does Landlosen mean?](#what-does-landlosen-mean)
   * [Table of Contents](#table-of-contents)
@@ -25,6 +27,7 @@ _Landlosen_ is Norwegian and is put together from two words, "land" and "los". "
     * [Using the provided `.bat`-file](#using-the-provided-bat-file)
   * [Extra features](#extra-features)
   * [Notes](#notes)
+  * [Screenshots](#screenshots)
 <!-- TOC -->
 
 ## Task description
@@ -61,3 +64,20 @@ _Landlosen_ is Norwegian and is put together from two words, "land" and "los". "
 - Det er en del blanding av norsk og engelsk. 
 
 - Flowbite component library var ikke så greit å jobbe med, derfor er det skrevet egne løsninger innimellom for større detaljkontroll...
+
+## Screenshots
+
+![](./static/Landing_light.png)
+Landing page with countries retrieved from [RestCountries](https://restcountries.com)' all endpoint in light mode.  
+![](./static/Country_light.png)
+The page for retrieving information for a single country in light theme.
+![](./static/AllCountries_Light.png)
+The page for listing all countries, and the option to sort by name, population, area, and region in light mode.
+
+![](./static/Landing_dark.png)
+Landing page with countries retrieved from [RestCountries](https://restcountries.com)' all endpoint in dark mode.
+![](./static/Country_dark.png)
+The page for retrieving information for a single country in dark theme.
+![](./static/AllCountries_dark.png)
+The page for listing all countries, and the option to sort by name, population, area, and region in dark mode.
+
