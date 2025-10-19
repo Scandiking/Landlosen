@@ -155,7 +155,7 @@ Layoutfil.
                     />
 
                     {#if showDropdown}
-                        <div class="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-80 overflow-y-auto z-50">
+                        <div class="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 dark:text-white rounded-lg shadow-lg max-h-80 overflow-y-auto z-50">
                             {#each searchResults as country}
                                 <button
                                         on:click={() => selectCountry(country)}

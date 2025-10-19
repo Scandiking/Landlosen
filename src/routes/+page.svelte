@@ -113,6 +113,7 @@
     {/if}
 </div>
 
+<!-- Do not remove :global(.dark) despite IDE saying them not being used. They ARE in fact being used. -->
 <style>
     .container {
         max-width: 1400px;
@@ -125,6 +126,10 @@
         margin-bottom: 2rem;
         color: #6b7280;
         font-size: 1.125rem;
+    }
+
+    :global(.dark) .results-info {
+        color: #9ca3af;
     }
 
     .country-grid {
@@ -144,9 +149,20 @@
         border: 1px solid #e5e7eb;
     }
 
+    :global(.dark) .country-card {
+        background: #1f2937;
+        border-color: #374151;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    }
+
     .country-card:hover {
         transform: translateY(-4px);
         box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+    }
+
+    :global(.dark) .country-card:hover {
+        border-color: #93c5fd;
+        box-shadow: 0 8px 8px rgba(50,50,50,0.5);
     }
 
     .country-card img {
@@ -164,9 +180,18 @@
         color: #111827;
     }
 
+    :global(.dark) .country-card h3 {
+        color: #f3f4f6;
+    }
+
     .country-card p {
         color: #6b7280;
         margin: 0.25rem 0;
+    }
+
+
+    :global(.dark) .country-card p {
+        color: #9ca3af;
     }
 
     .pagination {
@@ -187,9 +212,18 @@
         transition: all 0.2s;
     }
 
+
+
     .pagination button:hover:not(:disabled) {
         background: #f3f4f6;
         border-color: #9ca3af;
+        transform: translateY(-2px);
+        transition: transform 0.2s, background 0.2s, border-color 0.2s;
+    }
+
+    :global(.dark) .pagination button:hover:not(:disabled) {
+        background: #374151;
+        border-color: #4b5563;
         transform: translateY(-2px);
         transition: transform 0.2s, background 0.2s, border-color 0.2s;
     }
@@ -198,6 +232,11 @@
         background: #3b82f6;
         color: white;
         border-color: #3b82f6;
+    }
+
+    :global(.dark) .pagination button.active {
+        background: #2563eb;
+        border-color: #2563eb;
     }
 
     .pagination button:disabled {
@@ -209,6 +248,21 @@
         color: #6b7280;
         padding: 0 0.5rem;
     }
+
+    :global(.dark) .pagination span {
+        color: #9ca3af;
+    }
+
+    .error {
+        color: #ef4444;
+        text-align: center;
+        padding: 2rem;
+    }
+
+    :global(.dark) .error {
+        color: #f87171;
+    }
+
 
 </style>
 
