@@ -1,6 +1,7 @@
 <script>
     import { onMount, getContext } from 'svelte';
-    import { getAllCountries } from '$lib/api/countries.js';
+    import { getAllCountries } from '$lib/api/countries.ts';
+    // Oversette land fra engelsk til norsk, da RestCountries mangler dette:
     import { countryTranslations } from '$lib/translations/countries';
 
     const searchTerm = getContext('searchTerm');
@@ -11,7 +12,9 @@
     let loading = true;
     let error = null;
 
+    // Starte på side 1
     let currentPage = 1;
+    // Vise 20 land i  utgangspunktet
     let itemsPerPage = 20;
 
     $: totalPages = Math.ceil(filteredCountries.length / itemsPerPage);

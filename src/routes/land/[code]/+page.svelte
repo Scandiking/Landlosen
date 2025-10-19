@@ -2,7 +2,12 @@
     import { page } from '$app/stores';
     import { onMount, getContext } from 'svelte';
     import type { Writable } from 'svelte/store';
-    import { countryTranslations } from '$lib/translations/countries';
+    import { countryTranslations } from '$lib/translations/countries.ts';
+    import { languageTranslations} from "$lib/translations/languages.ts";
+    import { currencyTranslations} from "$lib/translations/currencies.ts";
+    import { regionTranslations } from "$lib/translations/regions.ts";
+    import { subregionTranslations } from "$lib/translations/subregions.ts";
+    import { countryOfficialTranslations } from "$lib/translations/countries_official.ts";
 
     const lang = getContext<Writable<'no' | 'en'>>('lang');
 
@@ -51,6 +56,7 @@
         }
     });
 
+    // Hente fellesnavn (Norge i stedet for Kongeriket Norge)
     function getCountryName(country: Country): string {
         if ($lang === 'no') {
             if (country.translations?.nob?.common) {
@@ -63,25 +69,64 @@
         return country.name.common;
     }
 
+    // Hente offisielle landnavn (Kongeriket Norge i stedet for Norge)
     function getOfficialName(country: Country): string {
         if ($lang === 'no') {
-            if (country.translations?.nob?.official) {
-                return country.translations.nob.official;
-            }
-            const commonTranslation = countryTranslations[country.name.common];
-            if (commonTranslation) {
-                return commonTranslation;
+            // Rest‑Countries har ingen nob‑oversettelser → bruk vår egen fil
+            const official = countryOfficialTranslations[country.name.common];
+            if (official) {
+                return official;
             }
         }
+        // Ingen norsk oversettelse – fall tilbake til den engelske offisielle betegnelsen
         return country.name.official;
     }
+
+    // Hjelpefunksjon for å oversette vanlige navn
+    $: displayedName = (() => {
+        if (!country) return '';
+        if ($lang === 'no') {
+            const fromMap = countryTranslations[country.name.common];
+            if (fromMap) return fromMap;
+        }
+        return country.name.common;
+    })();
+
+    // Hjelpefunksjon for å oversette offisielle navn
+    $: displayedOfficial = (() => {
+        if (!country) return '';
+        if ($lang === 'no') {
+            const fromMap = countryOfficialTranslations[country.name.official];
+            if (fromMap) return fromMap;
+        }
+        return country.name.official;
+    })();
+
+    // Hjelpefunksjon for å oversette språknavn (Engelsk -> norsk)
+    function translateLanguage(name: string): string {
+        return $lang === 'no' && languageTranslations[name] ? languageTranslations[name] : name;
+    }
+
+    // Hjelpefunksjon for å oversette valutanavn (Engelsk -> norsk)
+    function translateCurrency(name: string): string {
+        return $lang === 'no' && currencyTranslations[name] ? currencyTranslations[name] : name;
+    }
+
+    // Hjelpefunksjon for å oversette regionnavn
+    $: translateRegion = (name: string) =>
+        $lang === 'no' && regionTranslations[name] ? regionTranslations[name] : name;
+
+    //Hjelpefunksjon for å oversette underregionnavn
+    $: translateSubregion = (name: string) =>
+        $lang === 'no' && subregionTranslations[name] ? subregionTranslations[name] : name;
+
 
     const translations = {
         no: {
             backToList: '← Tilbake til listen',
             capital: 'Hovedstad',
             region: 'Region',
-            subregion: 'Subregion',
+            subregion: 'Underregion',
             population: 'Befolkning',
             area: 'Areal',
             languages: 'Språk',
@@ -124,23 +169,22 @@
             <div class="flex flex-col items-center mb-8">
                 <img
                         src={country.flags.svg}
-                        alt="{getCountryName(country)} {$lang === 'no' ? 'flagg' : 'flag'}"
-                        class="flag mb-4"
+                        alt="{displayedName} {$lang === 'no' ? 'flagg' : 'flag'}"                        class="flag mb-4"
                 />
-                <h1 class="text-4xl font-bold mb-2 dark:text-white text-center">{getCountryName(country)}</h1>
-                <h2 class="text-xl text-gray-600 dark:text-gray-400 text-center">{getOfficialName(country)}</h2>
+                <h1 class="text-4xl font-bold mb-2 dark:text-white text-center">{displayedName}</h1>
+                <h2 class="text-xl text-gray-600 dark:text-gray-400 text-center">{displayedOfficial}</h2>
             </div>
 
             <!-- Details Section - 2 Columns -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div class="info-item">
                     <strong>{t.region}:</strong>
-                    <span>{country.region}</span>
+                    <span>{translateRegion(country.region)}</span>
                 </div>
 
                 <div class="info-item">
                     <strong>{t.subregion}:</strong>
-                    <span>{country.subregion || t.unknown}</span>
+                    <span>{country.subregion ? translateSubregion(country.subregion) : t.unknown}</span>
                 </div>
 
                 <div class="info-item">
@@ -160,16 +204,31 @@
 
                 <div class="info-item">
                     <strong>{t.languages}:</strong>
-                    <span>{Object.values(country.languages || {}).join(', ')}</span>
+                    <span>
+                        {#if country.languages}
+                            {Object.values(country.languages)
+                                .map(l => translateLanguage(l) || t.unknown)
+                                .join(', ')}
+                        {:else}
+                            {t.unknown}
+                        {/if}
+                    </span>
                 </div>
 
                 <div class="info-item">
                     <strong>{t.currencies}:</strong>
                     <span>
-                    {Object.values(country.currencies || {})
-                        .map(c => `${c.name} (${c.symbol})`)
-                        .join(', ')}
-                </span>
+                        {#if country.currencies}
+                            {Object.entries(country.currencies)
+                                .map(([code, c]) => {
+                                    const name = translateCurrency(c.name) || t.unknown;
+                                    return `${name} (${c.symbol ?? ''})`;
+                                })
+                                .join(', ')}
+                        {:else}
+                            {t.unknown}
+                        {/if}
+                    </span>
                 </div>
 
                 <div class="info-item">
@@ -260,25 +319,32 @@
 
     .map-link {
         display: inline-block;
-        padding: 0.75rem 1.5rem;
-        background: #3b82f6;
-        color: white;
-        text-decoration: none;
+        padding: 0.75rem 0.75rem;
+        color: #60a5fa;
+        border: 1px solid #60a5fa;
         border-radius: 8px;
-        transition: background 0.2s;
         font-weight: 500;
+        text-decoration: none;
+        transition: background 0.2s, opacity 0.2s, box-shadow 0.2s;
     }
 
     .map-link:hover {
-        background: #2563eb;
+        background: #60a5fa;
+        color: #fff;
+        box-shadow: rgba(0, 0, 0, 0.15) 0px 2px 2px 1px;
+        transition: translate-y-2px, background 0.2s, opacity 0.2s;
     }
 
     :global(.dark) .map-link {
         background: #2563eb;
+        color: #fff;
     }
 
     :global(.dark) .map-link:hover {
-        background: #1d4ed8;
+        background: #2563eb;
+        border: 1px solid #93c5fd;
+        box-shadow: #93c5fd 0px 2px 2px 1px;
+        transition: translate-y-2px, background 0.2s, opacity 0.2s;
     }
 
     .error {

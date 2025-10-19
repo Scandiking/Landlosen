@@ -1,44 +1,84 @@
 <script>
+    // Kjører kode når komponenten lastes/mountes
     import { onMount } from 'svelte';
+    // Henter data om land
     import { getAllCountries } from '$lib/api/countries.js';
-    import { Card, Input, Select, Button, Pagination } from 'flowbite-svelte';
+    // Henter UI-elementer fra Flowbite-UI-biblioteket
+    import { Card, Input, Select, Button } from 'flowbite-svelte';
+    // Henter søkeikon
     import { SearchOutline } from 'flowbite-svelte-icons';
+    // Deler data mellom komponenter (for system/lyst/mørkt tema her)
     import { getContext } from 'svelte';
+    import {countryOfficialTranslations} from "$lib/translations/countries_official.js";
 
-    /** @type {any[]} */
+
+    // Opprette liste for landene
     let countries = [];
+    // Vise innlastings-elementer når ting lastes, for å fortelle bruker at "joda, PC-en jobber, den har ikke fryst"
     let loading = true;
+    // Søk er i utgangspunktet tomt, og viser derfor alle land i pagineringen
     let searchTerm = '';
-    /** @type {string | null} */
+
+    // "Unsette" feilmelding, om ikke null, f.eks string, vises feilmelding uansett. Misvisende.
     let error = null;
 
+    // Starte på side 1
     let currentPage = 1;
+    // Vise 20 land per side i utgangspunktet
     let itemsPerPage = 20;
+    // Sortere på landenes navn i utgangspunktet
     let sortBy = 'name';
+    // Sortere på navn stigende (alfabetisk)
     let sortOrder = 'asc';
 
+    // Ikke vis filter-kortet på mobil viewport i utgangspunkt
     let showFilters = false;
 
-    let itemsPerPageOptions = [
-        {value: 10, name: '10 per side' },
-        {value: 20, name: '20 per side' },
-        {value: 50, name: '50 per side' },
-        {value: 100, name: '100 per side' },
+    // Sorteringsmuligheter
+    let sortOptions = [
+        { value: 'name', name: 'Navn' },
+        { value: 'population', name: 'Befolkning' },
+        { value: 'area', name: 'Areal' },
+        { value: 'region', name: 'Region' }
     ];
 
+    // Stigende eller synkende sortering på resultater
+    let orderOptions = [
+        { value: 'asc', name: '↑ Stigende' },
+        { value: 'desc', name: '↓ Synkende' }
+    ];
 
+    // Hvor mange treff per side
+    let perPageOptions = [
+        { value: 10, name: '10 per side' },
+        { value: 20, name: '20 per side' },
+        { value: 50, name: '50 per side' },
+        { value: 100, name: '100 per side' },
+        { value: 220, name: 'Alle land på én side' },
+    ];
+
+    // Tilbakestille til første side når itemsPerPage endres
     $: if (itemsPerPage) {
         currentPage = 1;
     }
 
-    $: filteredCountries = countries.filter(country =>
-        country.name.common.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    // Filtrere på land etter searchTerm, uavhengig av små og store bokstaver, engelsk eller norsk
+    $: filteredCountries = countries.filter(country => {
+        const enName = country.name.common.toLowerCase();
+        const official = country.name.official;
+        const noName = (countryOfficialTranslations[official] ?? '').toLowerCase();
+        const term = searchTerm.toLowerCase();
+        return enName.includes(term) || noName.includes(term)
+    });
 
+
+    // JavaScript krever to-element-sammenligning for sort().
+    // $ kjører reaktivt, ...filteredCountries kopierer array før sortering for å unngå mutasjon av utgangspunktet
     $: sortedCountries = [...filteredCountries].sort((a, b) => {
         let compareA, compareB;
-
+        // Sortere hvilken egenskap det skal sorteres på
         switch(sortBy) {
+            // Om det er "name", hentes verdien for hvert land ut
             case 'name':
                 compareA = a.name.common;
                 compareB = b.name.common;
@@ -59,29 +99,33 @@
                 return 0;
         }
 
+
+        // Sjekke om sortere tekst
         if (typeof compareA === 'string') {
+            // Sammenligner norsk tekst
             const result = compareA.localeCompare(compareB, 'nb-NO');
+            // Returnerer resultat stigende eller synkende
             return sortOrder === 'asc' ? result : -result;
+            // Ellers (tall)
         } else {
+            // Resulterer resultat stigende eller synkende for tall
             return sortOrder === 'asc' ? compareA - compareB : compareB - compareA;
         }
     });
 
-    $: pages = Array.from({length: totalPages }, (_, i) => ({
-        name: (i + 1).toString(),
-        active: i + 1 === currentPage
-    }));
-
+    // Oppdatere reaktivt når sortedCountries eller itemsPerPage endres. Runde til nærmeste hele side for å unngå "side 3,77"
     $: totalPages = Math.ceil(sortedCountries.length / itemsPerPage);
 
+    // Bestemme hvilke land som vises på currentPage
     $: paginatedCountries = sortedCountries.slice(
         (currentPage - 1) * itemsPerPage,
         currentPage * itemsPerPage
     );
 
-    $: if (itemsPerPage) currentPage = 1;
-    $: if (searchTerm || sortBy || sortOrder) currentPage = 1;
+    // Sette reaktivt til første side etter ny setting av itemsPerpage, searchTerm, osv.
+    $: if (itemsPerPage || searchTerm || sortBy || sortOrder) currentPage = 1;
 
+    // Kjøre ved mount i DOM
     onMount(async () => {
         try {
             countries = await getAllCountries();
@@ -93,42 +137,7 @@
         }
     });
 
-    const lang = getContext('lang');
-
-    const previous = () => {
-        if (currentPage > 1) {
-            currentPage -= 1;
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-    };
-
-    const next = () => {
-        if (currentPage < totalPages) {
-            currentPage += 1;
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-    };
-
-    let sortOptions = [
-        { value: 'name', name: '📝 Navn' },
-        { value: 'population', name: '👥 Befolkning' },
-        { value: 'area', name: '📏 Areal' },
-        { value: 'region', name: '🌍 Region' }
-    ];
-
-    let orderOptions = [
-        { value: 'asc', name: '↑ Stigende' },
-        { value: 'desc', name: '↓ Synkende' }
-    ];
-
-    let perPageOptions = [
-        { value: 10, name: '10 per side' },
-        { value: 20, name: '20 per side' },
-        { value: 50, name: '50 per side' },
-        { value: 100, name: '100 per side' },
-        { value: 220, name: 'Alle land på én side' },
-    ];
-
+    // Sette vindu til toppen av siden ved ny innlasting av side
     function changePage(page) {
         if (page >= 1 && page <= totalPages) {
             currentPage = page;
@@ -150,16 +159,15 @@
         </div>
     {:else if error}
         <Card class="text-center max-w-2xl mx-auto">
-            <p class="text-red-600 mb-4">❌ Feil: {error}</p>
+            <p class="text-red-600 mb-4">Feil: {error}</p>
             <Button href="/">← Tilbake til forsiden</Button>
         </Card>
     {:else}
-        <!-- Wikipedia-style two-column layout -->
+
         <div class="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-2">
 
-            <!-- MAIN SECTION - Country List (like Wikipedia article content) -->
             <main class="min-w-0 pb-10 lg:pb-0">
-                <!-- Stats -->
+
                 <div class="mb-4">
                     <span class="text-2xl font-semibold text-gray-900 dark:text-white">
                         {sortedCountries.length} land
@@ -174,7 +182,7 @@
                     {/if}
                 </div>
 
-                <!-- Country List -->
+
                 <div class="space-y-3 mb-8">
                     {#each paginatedCountries as country, index}
                         <Card
@@ -220,38 +228,50 @@
                     {/each}
                 </div>
 
-                <!-- Pagination -->
+
+<!-- =========================================================================== -->
+<!-- Programmatisk pagingering                                                   -->
+<!-- =========================================================================== -->
                 <div class="pagination">
+
+                    <!-- Tilbakeknapp -->
                     <button
                             on:click={() => changePage(currentPage - 1)}
                             disabled={currentPage === 1}
                     >
-                        {$lang === 'no' ? '←' : '←'}
+                        ←
                     </button>
 
+                    <!-- Iterer loop over n sider -->
                     {#each Array(totalPages) as _, i}
+                        <!-- Viser side 1, siste side og de som er +2 fra current side. Er du på side 5, ser du 1, 5, 6, 7, siste. -->
                         {#if i + 1 === 1 || i + 1 === totalPages || Math.abs(i + 1 - currentPage) <= 2}
+                            <!-- Knapp for de nevnte sidene -->
                             <button
                                     class:active={currentPage === i + 1}
                                     on:click={() => changePage(i + 1)}
                             >
                                 {i + 1}
                             </button>
+                        <!-- Sette "..." for utelatte sider. Utelatt av UX hensyn, decision fatigue -->
                         {:else if i + 1 === currentPage - 3 || i + 1 === currentPage + 3}
                             <span>...</span>
                         {/if}
                     {/each}
 
+                    <!-- Button for neste side -->
                     <button
                             on:click={() => changePage(currentPage + 1)}
                             disabled={currentPage === totalPages}
                     >
-                        {$lang === 'no' ? '→' : '→'}
+                        →
                     </button>
                 </div>
             </main>
 
-            <!-- SIDEBAR - Search and Filters -->
+<!-- =========================================================================== -->
+<!-- Sidebar for søk og filter                                                   -->
+<!-- =========================================================================== -->
             <aside class="lg:order-last">
                 <!-- Mobile Filter toggle button, sticky to bottom -->
                 <button
@@ -273,7 +293,7 @@
                         class:hidden={!showFilters}
                         class:lg:block={true}
                 >
-                    <Card class="bg-gray-50 dark:bg-gray-800" style="box-shadow: 0 0 35px rgba(0,0,0,0.25);">
+                    <Card class="bg-gray-50 dark:bg-gray-800" style="box-shadow: 0 0 15px rgba(0,0,0,0.15);">
                         <div class="max-h-[70vh] overflow-y-auto">
                         <h3 class="hidden lg:block text-lg font-semibold text-gray-900 dark:text-white mb-4 pb-2 border-b border-gray-200 dark:border-gray-700">
                             Søk og filtrer
@@ -332,6 +352,7 @@
     {/if}
 </div>
 
+<!-- CSS -->
 <style>
     .pagination {
         display: flex;

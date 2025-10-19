@@ -1,7 +1,8 @@
 # Landlosen
 
 ![Jorda](./static/Jorda_1000samples.png)
-###### Image credits:  
+
+__Image credits__:  
 [Texture image](https://visibleearth.nasa.gov/images/74518/december-blue-marble-next-generation-w-topography/74520l): _Reto Stöckli, NASA Earth Observatory_  
 [Normal map image](https://visibleearth.nasa.gov/images/73934/topography/84331l): _Imagery by Jesse Allen, NASA's Earth Observatory, using data from the General Bathymetric Chart of the Oceans (GEBCO) produced by the British Oceanographic Data Centre_  
 
@@ -78,6 +79,7 @@ If you are not used to using the terminal, you can do it the point-and-click-way
 - Det er en del blanding av norsk og engelsk. 
 
 - Flowbite component library var ikke så greit å jobbe med, derfor er det skrevet egne løsninger innimellom for større detaljkontroll...
+- CSS burde vært global, men er per-page for øyeblikket.
 
 ## Screenshots
 

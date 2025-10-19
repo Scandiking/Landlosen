@@ -1,3 +1,6 @@
+<!--
+Layoutfil.
+ -->
 <script>
     import '../app.css';
     import { fly } from 'svelte/transition';
@@ -7,14 +10,16 @@
     import { theme } from '$lib/stores/theme';
     import { SunOutline, MoonOutline, DesktopPcOutline } from 'flowbite-svelte-icons';
 
-
+    // Sideskuff i utgangspunktet ikke åpen
     let drawerOpen = false;
+    // Språkvalg-dropdown heller ikke åpen i utgangspunktet
     let langDropdownOpen = false;
 
     const searchTerm = writable('');
     const lang = writable('no');
 
     setContext('searchTerm', searchTerm);
+    // Dele kontekst på tvers av pages, (språkk skal ikke resettes på neste page-load)
     setContext('lang', lang);
 
     onMount(() => {
@@ -30,10 +35,12 @@
         return () => mediaQuery.removeEventListener('change', handleChange);
     });
 
+    // Funksjon for å dra ut og dytte inn sideskuffen
     function toggleDrawer() {
         drawerOpen = !drawerOpen;
     }
 
+    // Stengt skuff
     function closeDrawer() {
         drawerOpen = false;
     }
@@ -42,11 +49,13 @@
         langDropdownOpen = !langDropdownOpen;
     }
 
+    // Sette språk
     function setLanguage(newLang) {
         $lang = newLang;
         langDropdownOpen = false;
     }
 
+    // Gå gjennom tema
     function cycleTheme() {
         const themes = ['system', 'light', 'dark'];
         const currentIndex = themes.indexOf($theme);
@@ -54,12 +63,13 @@
         theme.set(themes[nextIndex]);
     }
 
+    // Språk
     const languages = {
         no: { name: 'Norsk', flag: '🇳🇴' },
         en: { name: 'English', flag: '🇬🇧' }
     };
 
-
+    // Merkelapper for tema-cycler
     const themeLabels = {
         light: { no: 'Lys', en: 'Light' },
         dark: { no: 'Mørk', en: 'Dark' },
@@ -67,10 +77,18 @@
     };
 </script>
 
+<!-- Setter min høyde til 100% av skjermhøyde, bakgrunn på største div, lysegrå og mørkegrå for hhv lys og mørkt tema,  -->
 <div class="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <!-- Klistrer navbar til toppen, og legger navbaren over andre elementer med lavere z-index -->
     <nav class="sticky top-0 bg-white border-gray-200 dark:bg-gray-900 border-b dark:border-gray-700 relative z-30 shadow-lg">
+        <!-- Sentrerer annet innhold med et lite mellomrom -->
         <div class="flex items-center justify-between gap-4 px-4 py-3">
             <div class="flex items-center gap-2">
+                <!--
+                Aria-label for skjermleser
+                knapp for å åpne sideskuff
+                md-hidden for å kun vise hamburgermeny på mindre skjermer
+                -->
                 <button
                         on:click={toggleDrawer}
                         aria-label="Open menu"
@@ -80,9 +98,11 @@
                         <path fill-rule="evenodd" d="M3 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 10a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 15a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd"></path>
                     </svg>
                 </button>
+                <!-- Branding, stil for "logo" -->
                 <a href="/" class="text-xl font-semibold whitespace-nowrap dark:text-white">Landlosen</a>
             </div>
 
+            <!-- Søkefelt, skjult på små skjermer med md:block, tilgjengelig via knapp nærmere tommel på alle-land -->
             <div class="flex-1 max-w-md mx-4 hidden md:block">
                 <input
                         type="text"
@@ -92,7 +112,9 @@
                 />
             </div>
 
+            <!--Navbar-meny tilgjengelig på større skjerm ( i stedet for sideskuff) -->
             <div class="flex items-center gap-2">
+                <!-- hidden md:flex, vises ikke på mindre skjermer -->
                 <div class="hidden md:flex gap-6 mr-4">
                     <a href="/" class="text-gray-900 hover:text-blue-700 dark:text-white dark:hover:text-blue-500">
                         {$lang === 'no' ? 'Hjem' : 'Home'}
@@ -102,7 +124,10 @@
                     </a>
                 </div>
 
-                <!-- Theme Toggle Button -->
+                <!-- Theme Toggle Button ,
+                bytter ikon etter tema-kontekst,
+                viser ikke labels på mindre skjermer
+                -->
                 <button
                         on:click={cycleTheme}
                         class="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-lg dark:text-gray-300 dark:hover:bg-gray-700 transition-colors"
@@ -131,6 +156,7 @@
                         </svg>
                     </button>
 
+                    <!-- Dropwdown-meny for språkvalg, emoji for flag, fallback landkoder som NO -->
                     {#if langDropdownOpen}
                         <div class="absolute right-0 mt-2 w-40 bg-white rounded-lg shadow-lg dark:bg-gray-800 border border-gray-200 dark:border-gray-700 z-50">
                             <button
