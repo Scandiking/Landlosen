@@ -1,12 +1,23 @@
-<script>
+<script lang="ts">
     import { getContext } from 'svelte';
     import { countryTranslations } from '$lib/translations/countries.ts';
     import { Progressbar } from "flowbite-svelte";
     import { sineOut } from "svelte/easing";
+    import type { Writable } from 'svelte/store';
 
-    // FJERN searchTerm - finnes ikke lenger
-    const lang = getContext('lang');
-    const countries = getContext('countries');
+
+    type Country = {
+        cca3: string;
+        name: { common: string };
+        flags: { svg: string };
+        translations?: { nob?: { common: string } };
+        population?: number;
+        region: string;
+    };
+
+    const lang = getContext<Writable<'no' | 'en'>>('lang');
+    const countries = getContext<Writable<Country[]>>('countries');
+
 
     let currentPage = 1;
     let itemsPerPage = 20;
@@ -38,7 +49,6 @@
         }
     }
 
-
 </script>
 
 
@@ -57,17 +67,19 @@
         </p>
 
         <div class="country-grid">
-            {#each paginatedCountries as country, i}
-                <a
-                   href="/land/{country.cca3}"
-                   class="country-card"
-                >
-                    <img src={country.flags.svg} alt="{getCountryName(country)} flagg" />
-                    <h3>{getCountryName(country)}</h3>
-                    <p>👥 {country.population?.toLocaleString($lang === 'no' ? 'nb-NO' : 'en-US') || ($lang === 'no' ? 'Ukjent' : 'Unknown')}</p>
-                    <p>🌍 {country.region}</p>
-                </a>
-            {/each}
+
+                {#each paginatedCountries as country, i (country.cca3)}
+                    <a
+                       href="/land/{country.cca3}"
+                       class="country-card"
+                    >
+                        <img src={country.flags.svg} alt="{getCountryName(country)} flagg" />
+                        <h3>{getCountryName(country)}</h3>
+                        <p>👥 {country.population?.toLocaleString($lang === 'no' ? 'nb-NO' : 'en-US') || ($lang === 'no' ? 'Ukjent' : 'Unknown')}</p>
+                        <p>🌍 {country.region}</p>
+                    </a>
+                {/each}
+
         </div>
 
         <div class="pagination">
@@ -115,10 +127,6 @@
         font-size: 1.125rem;
     }
 
-    :global(.dark) .results-info {
-        color: #9ca3af;
-    }
-
     .country-grid {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -136,20 +144,9 @@
         border: 1px solid #e5e7eb;
     }
 
-    :global(.dark) .country-card {
-        background: #1f2937;
-        border-color: #374151;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-    }
-
     .country-card:hover {
         transform: translateY(-4px);
         box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-    }
-
-    :global(.dark) .country-card:hover {
-        border-color: #93c5fd;
-        box-shadow: 0 8px 8px rgba(50,50,50,0.5);
     }
 
     .country-card img {
@@ -167,17 +164,9 @@
         color: #111827;
     }
 
-    :global(.dark) .country-card h3 {
-        color: #f3f4f6;
-    }
-
     .country-card p {
         color: #6b7280;
         margin: 0.25rem 0;
-    }
-
-    :global(.dark) .country-card p {
-        color: #9ca3af;
     }
 
     .pagination {
@@ -198,22 +187,9 @@
         transition: all 0.2s;
     }
 
-    :global(.dark) .pagination button {
-        background: #1f2937;
-        border-color: #374151;
-        color: #e5e7eb;
-    }
-
     .pagination button:hover:not(:disabled) {
         background: #f3f4f6;
         border-color: #9ca3af;
-        transform: translateY(-2px);
-        transition: transform 0.2s, background 0.2s, border-color 0.2s;
-    }
-
-    :global(.dark) .pagination button:hover:not(:disabled) {
-        background: #374151;
-        border-color: #4b5563;
         transform: translateY(-2px);
         transition: transform 0.2s, background 0.2s, border-color 0.2s;
     }
@@ -222,11 +198,6 @@
         background: #3b82f6;
         color: white;
         border-color: #3b82f6;
-    }
-
-    :global(.dark) .pagination button.active {
-        background: #2563eb;
-        border-color: #2563eb;
     }
 
     .pagination button:disabled {
@@ -238,21 +209,6 @@
         color: #6b7280;
         padding: 0 0.5rem;
     }
-
-    :global(.dark) .pagination span {
-        color: #9ca3af;
-    }
-
-    .error {
-        color: #ef4444;
-        text-align: center;
-        padding: 2rem;
-    }
-
-    :global(.dark) .error {
-        color: #f87171;
-    }
-
 
 </style>
 
