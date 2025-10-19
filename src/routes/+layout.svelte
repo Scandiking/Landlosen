@@ -4,8 +4,8 @@ Layoutfil.
 <script lang="ts">
     import '../app.css';
     import { fly } from 'svelte/transition';
-    import { sineIn, sineOut } from 'svelte/easing';
-    import { getContext, setContext, onMount } from 'svelte';
+    import { sineIn } from 'svelte/easing';
+    import { setContext, onMount } from 'svelte';
     import { writable } from 'svelte/store';
     import { page } from '$app/stores';
     import { goto } from '$app/navigation';
@@ -13,7 +13,7 @@ Layoutfil.
     import { SunOutline, MoonOutline, DesktopPcOutline } from 'flowbite-svelte-icons';
     import { getAllCountries } from "$lib/api/countries.ts";
     import { countryTranslations } from "$lib/translations/countries.ts";
-    import { Progressbar } from 'flowbite-svelte';
+
 
     type Country = {
         cca3: string;
@@ -168,10 +168,6 @@ Layoutfil.
                         </div>
                     {/if}
                 </div>
-
-
-
-
 
             <!--Navbar-meny tilgjengelig på større skjerm ( i stedet for sideskuff) -->
             <div class="flex items-center gap-2">
