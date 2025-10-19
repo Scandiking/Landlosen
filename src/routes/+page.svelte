@@ -3,6 +3,8 @@
     import { getAllCountries } from '$lib/api/countries.ts';
     // Oversette land fra engelsk til norsk, da RestCountries mangler dette:
     import { countryTranslations } from '$lib/translations/countries';
+    import {Progressbar} from "flowbite-svelte";
+    import {sineOut} from "svelte/easing";
 
     const searchTerm = getContext('searchTerm');
     const lang = getContext('lang');
@@ -66,9 +68,11 @@
 
 <div class="container">
     {#if loading}
-        <p>{$lang === 'no' ? 'Laster land...' : 'Loading countries...'}</p>
+        <div class="text-center py-16">
+            <Progressbar labelOutside={$lang==='no' ? 'Laster land og strand...' : 'Discovering countries...'} animate precision={2} tweenDuration={1500} easing={sineOut}/>
+        </div>
     {:else if error}
-        <p class="error">{$lang === 'no' ? 'Feil' : 'Error'}: {error}</p>
+        <p class="error">{$lang === 'no' ? 'En feil har oppstått:' : 'An error occured:'}: {error}</p>
     {:else}
         <p class="results-info">
             {$lang === 'no'
@@ -225,11 +229,15 @@
     .pagination button:hover:not(:disabled) {
         background: #f3f4f6;
         border-color: #9ca3af;
+        transform: translateY(-2px);
+        transition: transform 0.2s, background 0.2s, border-color 0.2s;
     }
 
     :global(.dark) .pagination button:hover:not(:disabled) {
         background: #374151;
         border-color: #4b5563;
+        transform: translateY(-2px);
+        transition: transform 0.2s, background 0.2s, border-color 0.2s;
     }
 
     .pagination button.active {

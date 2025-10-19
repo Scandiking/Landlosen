@@ -8,6 +8,8 @@
     import { regionTranslations } from "$lib/translations/regions.ts";
     import { subregionTranslations } from "$lib/translations/subregions.ts";
     import { countryOfficialTranslations } from "$lib/translations/countries_official.ts";
+    import {Progressbar} from "flowbite-svelte";
+    import {sineOut} from "svelte/easing";
 
     const lang = getContext<Writable<'no' | 'en'>>('lang');
 
@@ -56,31 +58,7 @@
         }
     });
 
-    // Hente fellesnavn (Norge i stedet for Kongeriket Norge)
-    function getCountryName(country: Country): string {
-        if ($lang === 'no') {
-            if (country.translations?.nob?.common) {
-                return country.translations.nob.common;
-            }
-            if (countryTranslations[country.name.common]) {
-                return countryTranslations[country.name.common];
-            }
-        }
-        return country.name.common;
-    }
 
-    // Hente offisielle landnavn (Kongeriket Norge i stedet for Norge)
-    function getOfficialName(country: Country): string {
-        if ($lang === 'no') {
-            // Rest‑Countries har ingen nob‑oversettelser → bruk vår egen fil
-            const official = countryOfficialTranslations[country.name.common];
-            if (official) {
-                return official;
-            }
-        }
-        // Ingen norsk oversettelse – fall tilbake til den engelske offisielle betegnelsen
-        return country.name.official;
-    }
 
     // Hjelpefunksjon for å oversette vanlige navn
     $: displayedName = (() => {
@@ -157,8 +135,8 @@
     <a href="/" class="back-link">{t.backToList}</a>
 
     {#if loading}
-        <div class="flex justify-center items-center min-h-[400px]">
-            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <div class="text-center py-16">
+            <Progressbar labelOutside={$lang==='no' ? 'Laster land og strand...' : 'Discovering countries...'} animate precision={2} tweenDuration={1500} easing={sineOut}/>
         </div>
     {:else if error}
         <p class="error">{error}</p>
@@ -169,7 +147,8 @@
             <div class="flex flex-col items-center mb-8">
                 <img
                         src={country.flags.svg}
-                        alt="{displayedName} {$lang === 'no' ? 'flagg' : 'flag'}"                        class="flag mb-4"
+                        alt="{displayedName} {$lang === 'no' ? 'flagg' : 'flag'}"
+                        class="flag mb-4 shadow-xl"
                 />
                 <h1 class="text-4xl font-bold mb-2 dark:text-white text-center">{displayedName}</h1>
                 <h2 class="text-xl text-gray-600 dark:text-gray-400 text-center">{displayedOfficial}</h2>
@@ -283,7 +262,7 @@
         max-width: 500px;
         height: auto;
         border-radius: 8px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        box-shadow: 0 10px 15px rgba(0,0,0,0.25);
     }
 
     :global(.dark) .flag {

@@ -4,23 +4,41 @@
     // Henter data om land
     import { getAllCountries } from '$lib/api/countries.js';
     // Henter UI-elementer fra Flowbite-UI-biblioteket
-    import { Card, Input, Select, Button } from 'flowbite-svelte';
+    import {Card, Input, Select, Button, Progressbar} from 'flowbite-svelte';
+    import { sineOut } from 'svelte/easing';
     // Henter søkeikon
     import { SearchOutline } from 'flowbite-svelte-icons';
     // Deler data mellom komponenter (for system/lyst/mørkt tema her)
     import { getContext } from 'svelte';
-    import {countryOfficialTranslations} from "$lib/translations/countries_official.js";
-    import {countryTranslations} from "$lib/translations/countries.js";
 
+    // Importere norske egenbryggede oversettelser
+    import { countryOfficialTranslations } from "$lib/translations/countries_official.ts";
+    import { countryTranslations } from "$lib/translations/countries.ts";
+    import { regionTranslations } from "$lib/translations/regions.ts";
 
-    const lang: string = getContext('locale');
+    // Importere datatype Writable, for å lagre en/no i
+    import type { Writable } from "svelte/store";
 
-    const getDisplayName = (country: string) => {
-        if(lang==='no') {
-            const no = countryTranslations[country.name.common];
-            return no ?? countryOfficialTranslations[country.name.official];
+    // Lang er nå Writable store, $lang vil være typed som 'no'|'en'
+    const lang = getContext<Writable<'no' | 'en'>>('lang');
+
+    const translations = {
+        no: {
+            searchAndFilter: 'Søk og filtrer',
+            search: 'Søk',
+            searchPlaceholder: 'Søk...',
+            sortBy: 'Sorter etter',
+            order: 'Rekkefølge',
+            perPage: 'Vis per side'
+        },
+        en: {
+            searchAndFilter: 'Search and Filter',
+            search: 'Search',
+            searchPlaceholder: 'Search...',
+            sortBy: 'Sort by',
+            order: 'Order',
+            perPage: 'Show per page'
         }
-        return country.name.common
     };
 
     // Opprette liste for landene
@@ -46,26 +64,26 @@
     let showFilters = false;
 
     // Sorteringsmuligheter
-    let sortOptions = [
-        { value: 'name', name: 'Navn' },
-        { value: 'population', name: 'Befolkning' },
-        { value: 'area', name: 'Areal' },
-        { value: 'region', name: 'Region' }
+    $: sortOptions = [
+        { value: 'name', name: $lang === 'no' ? 'Navn' : 'Name' },
+        { value: 'population', name: $lang === 'no' ? 'Befolkning' : 'Population' },
+        { value: 'area', name: $lang === 'no' ? 'Areal' : 'Area' },
+        { value: 'region', name: $lang === 'no' ? 'Region' : 'Region' }
     ];
 
     // Stigende eller synkende sortering på resultater
-    let orderOptions = [
-        { value: 'asc', name: '↑ Stigende' },
-        { value: 'desc', name: '↓ Synkende' }
+    $: orderOptions = [
+        { value: 'asc', name: $lang === 'no' ? '↑ Stigende' : '↑ Ascending' },
+        { value: 'desc', name: $lang === 'no' ? '↓ Synkende' : '↓ Descending' }
     ];
 
     // Hvor mange treff per side
-    let perPageOptions = [
-        { value: 10, name: '10 per side' },
-        { value: 20, name: '20 per side' },
-        { value: 50, name: '50 per side' },
-        { value: 100, name: '100 per side' },
-        { value: 220, name: 'Alle land på én side' },
+    $: perPageOptions = [
+        { value: 10, name: $lang === 'no' ? '10 per side' : '10 per page' },
+        { value: 20, name: $lang === 'no' ? '20 per side' : '20 per page' },
+        { value: 50, name: $lang === 'no' ? '50 per side' : '50 per page' },
+        { value: 100, name: $lang === 'no' ? '100 per side' : '100 per page' },
+        { value: 220, name: $lang === 'no' ? 'Alle land på én side' : 'All countries on one page' },
     ];
 
     // Tilbakestille til første side når itemsPerPage endres
@@ -78,8 +96,10 @@
         const enName = country.name.common.toLowerCase();
         const official = country.name.official;
         const noName = (countryOfficialTranslations[official] ?? '').toLowerCase();
+        const enRegion = country.region.toLowerCase();
+        const noRegion = ($lang === 'no' ? regionTranslations[country.region] : country.region).toLowerCase();
         const term = searchTerm.toLowerCase();
-        return enName.includes(term) || noName.includes(term)
+        return enName.includes(term) || noName.includes(term) || enRegion.includes(term) || noRegion.includes(term)
     });
 
 
@@ -103,8 +123,12 @@
                 compareB = b.area || 0;
                 break;
             case 'region':
-                compareA = a.region || '';
-                compareB = b.region || '';
+                compareA = $lang === 'no' && regionTranslations[a.region]
+                    ? regionTranslations[a.region]
+                    : a.region;
+                compareB = $lang === 'no' && regionTranslations[b.region]
+                    ? regionTranslations[b.region]
+                    : b.region;
                 break;
             default:
                 return 0;
@@ -148,6 +172,8 @@
         }
     });
 
+    $: t = translations[$lang];
+
     // Sette vindu til toppen av siden ved ny innlasting av side
     function changePage(page) {
         if (page >= 1 && page <= totalPages) {
@@ -166,7 +192,7 @@
 
     {#if loading}
         <div class="text-center py-16">
-            <p class="text-gray-600">Laster land...</p>
+            <Progressbar labelOutside={$lang==='no' ? 'Laster land og strand...' : 'Discovering countries...'} animate precision={2} tweenDuration={1500} easing={sineOut}/>
         </div>
     {:else if error}
         <Card class="text-center max-w-2xl mx-auto">
@@ -212,13 +238,23 @@
                                 />
                                 <div class="flex-1 min-w-0">
                                     <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-1">
-                                        {country.name.common}
+
+                                        {$lang === 'no' && countryTranslations[country.name.common]
+                                            ? countryTranslations[country.name.common]
+                                            : country.name.common}
+
                                     </h3>
+
                                     <div class="flex items-center gap-3 text-sm text-gray-600 dark:text-gray-400">
-                                        <span class="font-medium">{country.region}</span>
+                                        <span class="font-medium">
+                                            {$lang === 'no' && regionTranslations[country.region]
+                                                ? regionTranslations[country.region]
+                                                : country.region}
+                                        </span>
+
                                         {#if country.capital?.[0]}
                                             <span class="text-gray-400">•</span>
-                                            <span>Hovedstad: {country.capital[0]}</span>
+                                            <span>{$lang==='no'?'Hovedstad':'Capital'}: {country.capital[0]}</span>
                                         {/if}
                                     </div>
                                 </div>
@@ -289,7 +325,7 @@
                         class="lg:hidden fixed bottom-0 left-0 right-0 z-40 px-4 py-3 bg-white dark:bg-gray-900 text-gray-900 dark:text-white font-medium flex items-center justify-between shadow-md border-t border-gray-200 dark:border-gray-700"
                         on:click={() => showFilters = !showFilters}
                 >
-                    <span>Søk og filtrer</span>
+                    <span>{t.searchAndFilter}</span>
                     <span class="text-xl">{showFilters ? '−' : '+'}</span>
                 </button>
 
@@ -307,18 +343,18 @@
                     <Card class="bg-gray-50 dark:bg-gray-800" style="box-shadow: 0 0 15px rgba(0,0,0,0.15);">
                         <div class="max-h-[70vh] overflow-y-auto">
                         <h3 class="hidden lg:block text-lg font-semibold text-gray-900 dark:text-white mb-4 pb-2 border-b border-gray-200 dark:border-gray-700">
-                            Søk og filtrer
+                            {t.searchAndFilter}
                         </h3>
 
                         <div class="space-y-4">
                             <!-- Search -->
                             <div>
                                 <label for="search" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
-                                    Søk
+                                    {t.search}
                                 </label>
                                 <Input
                                         id="search"
-                                        placeholder="Søk..."
+                                        placeholder={t.searchPlaceholder}
                                         bind:value={searchTerm}
                                         size="sm"
                                 >
@@ -331,7 +367,7 @@
                                 <!-- Sort By -->
                                 <div>
                                     <label for="sortBy" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
-                                        Sorter etter
+                                        {t.sortBy}
                                     </label>
                                     <Select id="sortBy" items={sortOptions} bind:value={sortBy} size="sm" />
                                 </div>
@@ -339,7 +375,7 @@
                                 <!-- Sort Order -->
                                 <div>
                                     <label for="sortOrder" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
-                                        Rekkefølge
+                                        {t.order}
                                     </label>
                                     <Select id="sortOrder" items={orderOptions} bind:value={sortOrder} size="sm" />
                                 </div>
@@ -347,7 +383,7 @@
                                 <!-- Items Per Page -->
                                 <div>
                                     <label for="perPage" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
-                                        Vis per side
+                                        {t.perPage}
                                     </label>
                                     <Select id="perPage" items={perPageOptions} bind:value={itemsPerPage} size="sm" />
                                 </div>
@@ -393,11 +429,15 @@
     .pagination button:hover:not(:disabled) {
         background: #f3f4f6;
         border-color: #9ca3af;
+        transform: translateY(-2px);
+        transition: transform 0.2s, background 0.2s, border-color 0.2s;
     }
 
     :global(.dark) .pagination button:hover:not(:disabled) {
         background: #374151;
         border-color: #4b5563;
+        transform: translateY(-2px);
+        transition: transform 0.2s, background 0.2s, border-color 0.2s;
     }
 
     .pagination button.active {
