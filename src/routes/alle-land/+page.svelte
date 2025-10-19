@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
     // Kjører kode når komponenten lastes/mountes
     import { onMount } from 'svelte';
     // Henter data om land
@@ -10,7 +10,18 @@
     // Deler data mellom komponenter (for system/lyst/mørkt tema her)
     import { getContext } from 'svelte';
     import {countryOfficialTranslations} from "$lib/translations/countries_official.js";
+    import {countryTranslations} from "$lib/translations/countries.js";
 
+
+    const lang: string = getContext('locale');
+
+    const getDisplayName = (country: string) => {
+        if(lang==='no') {
+            const no = countryTranslations[country.name.common];
+            return no ?? countryOfficialTranslations[country.name.official];
+        }
+        return country.name.common
+    };
 
     // Opprette liste for landene
     let countries = [];

@@ -18,6 +18,7 @@ export const subregionTranslations: Record<string, string> = {
     'Southern Asia': 'Sør-Asia',
     'Western Asia': 'Vest-Asia',
     'Southeast Asia': 'Sydøst-Asia',
+    'South-Eastern Asia': 'Sydøst-Asia',
     'Middle East': 'Midtøsten',
     'Far East': 'Fjerne østen',
     'Indian Ocean': 'Indiahavet',
@@ -29,8 +30,11 @@ export const subregionTranslations: Record<string, string> = {
     'Antarctica': 'Antarktika',
     'Sub-Saharan Africa': 'Subsaharisk Afrika',
     'North Africa': 'Nord-Afrika',
+    'Northern Africa': 'Nord-Afrika',
     'East Africa': 'Øst-Afrika',
     'West Africa': 'Vest-Afrika',
+    'Western Africa': 'Vest-Afrika',
     'Southern Africa': 'Sør-Afrika',
     'Central Africa': 'Sentral-Afrika',
+    'Middle Africa':'Midt-Afrika'
 };
