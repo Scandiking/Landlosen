@@ -69,6 +69,7 @@ If you are not used to using the terminal, you can do it the point-and-click-way
 ## Extra features
 - Søke etter land i søkeboks
 - Velge språk; norsk eller engelsk
+  - Reaktiv lasting av språkstrenger, ingen ny sidelasting nødvendig 
   - RestCountries inkluderer ikke norske oversettelser i sine endpoints, så det som `GET`-es er på engelsk. Det tilbys likevel noen lokale oversettelser i dette prosjektet, men denne listen er ikke endelig. Litauen blir for eksempel Litauen, mens Elfenbenskysten forblir Ivory Coast... 
 - RestCountries har ikke translation for norske egennavn på land, dette finnes i `countries.ts`.
 - Velge temamodus; systemmodus, mørk modus eller lys modus

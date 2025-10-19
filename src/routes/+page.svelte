@@ -1,40 +1,23 @@
 <script>
-    import { onMount, getContext } from 'svelte';
-    import { getAllCountries } from '$lib/api/countries.ts';
-    // Oversette land fra engelsk til norsk, da RestCountries mangler dette:
-    import { countryTranslations } from '$lib/translations/countries';
-    import {Progressbar} from "flowbite-svelte";
-    import {sineOut} from "svelte/easing";
+    import { getContext } from 'svelte';
+    import { countryTranslations } from '$lib/translations/countries.ts';
+    import { Progressbar } from "flowbite-svelte";
+    import { sineOut } from "svelte/easing";
 
-    const searchTerm = getContext('searchTerm');
+    // FJERN searchTerm - finnes ikke lenger
     const lang = getContext('lang');
+    const countries = getContext('countries');
 
-    let countries = [];
-    let filteredCountries = [];
-    let loading = true;
-    let error = null;
-
-    // Starte på side 1
     let currentPage = 1;
-    // Vise 20 land i  utgangspunktet
     let itemsPerPage = 20;
 
+    $: loading = $countries.length === 0;
+    $: filteredCountries = $countries; // Vis alle land
     $: totalPages = Math.ceil(filteredCountries.length / itemsPerPage);
     $: paginatedCountries = filteredCountries.slice(
         (currentPage - 1) * itemsPerPage,
         currentPage * itemsPerPage
     );
-
-    onMount(async () => {
-        try {
-            countries = await getAllCountries();
-            filteredCountries = countries;
-            loading = false;
-        } catch (e) {
-            error = e instanceof Error ? e.message : 'Ukjent feil';
-            loading = false;
-        }
-    });
 
     function getCountryName(country) {
         if ($lang === 'no') {
@@ -48,31 +31,23 @@
         return country.name.common;
     }
 
-    $: {
-        filteredCountries = countries.filter(country => {
-            const countryName = getCountryName(country);
-            return countryName
-                .toLowerCase()
-                .includes($searchTerm.toLowerCase());
-        });
-        currentPage = 1;
-    }
-
     function changePage(page) {
         if (page >= 1 && page <= totalPages) {
             currentPage = page;
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
     }
+
+
 </script>
+
 
 <div class="container">
     {#if loading}
         <div class="text-center py-16">
             <Progressbar labelOutside={$lang==='no' ? 'Laster land og strand...' : 'Discovering countries...'} animate precision={2} tweenDuration={1500} easing={sineOut}/>
         </div>
-    {:else if error}
-        <p class="error">{$lang === 'no' ? 'En feil har oppstått:' : 'An error occured:'}: {error}</p>
+
     {:else}
         <p class="results-info">
             {$lang === 'no'
@@ -82,8 +57,11 @@
         </p>
 
         <div class="country-grid">
-            {#each paginatedCountries as country}
-                <a href="/land/{country.cca3}" class="country-card">
+            {#each paginatedCountries as country, i}
+                <a
+                   href="/land/{country.cca3}"
+                   class="country-card"
+                >
                     <img src={country.flags.svg} alt="{getCountryName(country)} flagg" />
                     <h3>{getCountryName(country)}</h3>
                     <p>👥 {country.population?.toLocaleString($lang === 'no' ? 'nb-NO' : 'en-US') || ($lang === 'no' ? 'Ukjent' : 'Unknown')}</p>
@@ -274,5 +252,7 @@
     :global(.dark) .error {
         color: #f87171;
     }
+
+
 </style>
 

@@ -10,6 +10,7 @@
     import { SearchOutline } from 'flowbite-svelte-icons';
     // Deler data mellom komponenter (for system/lyst/mørkt tema her)
     import { getContext } from 'svelte';
+    import { page } from '$app/stores';
 
     // Importere norske egenbryggede oversettelser
     import { countryOfficialTranslations } from "$lib/translations/countries_official.ts";
@@ -160,6 +161,11 @@
     // Sette reaktivt til første side etter ny setting av itemsPerpage, searchTerm, osv.
     $: if (itemsPerPage || searchTerm || sortBy || sortOrder) currentPage = 1;
 
+    $: t = translations[$lang];
+
+    // Les fra URL i stedet for kontekst
+    $: searchFromUrl = $page.url.searchParams.get('search') || '';
+
     // Kjøre ved mount i DOM
     onMount(async () => {
         try {
@@ -172,7 +178,7 @@
         }
     });
 
-    $: t = translations[$lang];
+
 
     // Sette vindu til toppen av siden ved ny innlasting av side
     function changePage(page) {
@@ -187,7 +193,7 @@
 <div class="max-w-screen-2xl mx-auto px-4 py-6">
     <!-- Header -->
     <div class="mb-8 text-left">
-        <h1 class="text-4xl font-bold text-gray-900 dark:text-white mb-2">Alle land</h1>
+        <h1 class="text-4xl font-bold text-gray-900 dark:text-white mb-2">{$lang==='no' ? 'Alle land' : 'All countries'}</h1>
     </div>
 
     {#if loading}
@@ -207,14 +213,14 @@
 
                 <div class="mb-4">
                     <span class="text-2xl font-semibold text-gray-900 dark:text-white">
-                        {sortedCountries.length} land
+                        {sortedCountries.length} {$lang==='no'?'land':'countries'}
                         {#if sortedCountries.length !== countries.length}
                             <span class="text-base font-normal text-gray-500">av {countries.length}</span>
                         {/if}
                     </span>
                     {#if totalPages > 1}
                         <span class="block text-sm text-gray-600 dark:text-gray-400 mt-1">
-                            Side {currentPage} / {totalPages}
+                            {$lang==='no'?'Side':'Page'} {currentPage} / {totalPages}
                         </span>
                     {/if}
                 </div>

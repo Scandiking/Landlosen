@@ -1,28 +1,45 @@
 <!--
 Layoutfil.
  -->
-<script>
+<script lang="ts">
     import '../app.css';
     import { fly } from 'svelte/transition';
-    import { sineIn } from 'svelte/easing';
-    import { setContext, onMount } from 'svelte';
+    import { sineIn, sineOut } from 'svelte/easing';
+    import { getContext, setContext, onMount } from 'svelte';
     import { writable } from 'svelte/store';
+    import { page } from '$app/stores';
+    import { goto } from '$app/navigation';
     import { theme } from '$lib/stores/theme';
     import { SunOutline, MoonOutline, DesktopPcOutline } from 'flowbite-svelte-icons';
+    import { getAllCountries } from "$lib/api/countries.ts";
+    import { countryTranslations } from "$lib/translations/countries.ts";
+    import { Progressbar } from 'flowbite-svelte';
 
-    // Sideskuff i utgangspunktet ikke åpen
+    type Country = {
+        cca3: string;
+        name: { common: string };
+        flags: { svg: string };
+        translations?: { nob?: { common: string } };
+        population?: number;
+        region: string;
+    };
+
     let drawerOpen = false;
-    // Språkvalg-dropdown heller ikke åpen i utgangspunktet
     let langDropdownOpen = false;
+    let searchInput = '';
+    let countries: Country[] = [];
+    let searchResults: Country[] = [];
+    let showDropdown = false;
 
-    const searchTerm = writable('');
     const lang = writable('no');
+    const countriesStore = writable<Country[]>([]);
 
-    setContext('searchTerm', searchTerm);
-    // Dele kontekst på tvers av pages, (språkk skal ikke resettes på neste page-load)
     setContext('lang', lang);
+    setContext('countries', countriesStore);
 
-    onMount(() => {
+    onMount(async () => {
+        countries = await getAllCountries();
+        countriesStore.set(countries); // Rett variabel
         theme.init();
 
         const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
@@ -35,12 +52,40 @@ Layoutfil.
         return () => mediaQuery.removeEventListener('change', handleChange);
     });
 
-    // Funksjon for å dra ut og dytte inn sideskuffen
+
+    function getCountryName(country: Country) {
+        if ($lang === 'no') {
+            if (country.translations?.nob?.common) {
+                return country.translations.nob.common;
+            }
+            if (countryTranslations[country.name.common]) {
+                return countryTranslations[country.name.common];
+            }
+        }
+        return country.name.common;
+    }
+
+    $: {
+        if (searchInput.trim()) {
+            searchResults = countries
+                .filter(c => getCountryName(c).toLowerCase().includes(searchInput.toLowerCase()))
+                .slice(0, 10);
+            showDropdown = searchResults.length > 0;
+        } else {
+            showDropdown = false;
+        }
+    }
+
+    function selectCountry(country: Country) {
+        goto(`/land/${country.cca3}`);
+        searchInput = '';
+        showDropdown = false;
+    }
+
     function toggleDrawer() {
         drawerOpen = !drawerOpen;
     }
 
-    // Stengt skuff
     function closeDrawer() {
         drawerOpen = false;
     }
@@ -49,27 +94,23 @@ Layoutfil.
         langDropdownOpen = !langDropdownOpen;
     }
 
-    // Sette språk
-    function setLanguage(newLang) {
+    function setLanguage(newLang: 'no' | 'en') {
         $lang = newLang;
         langDropdownOpen = false;
     }
 
-    // Gå gjennom tema
     function cycleTheme() {
-        const themes = ['system', 'light', 'dark'];
+        const themes = ['system', 'light', 'dark'] as const;
         const currentIndex = themes.indexOf($theme);
         const nextIndex = (currentIndex + 1) % themes.length;
         theme.set(themes[nextIndex]);
     }
 
-    // Språk
     const languages = {
         no: { name: 'Norsk', flag: '🇳🇴' },
         en: { name: 'English', flag: '🇬🇧' }
     };
 
-    // Merkelapper for tema-cycler
     const themeLabels = {
         light: { no: 'Lys', en: 'Light' },
         dark: { no: 'Mørk', en: 'Dark' },
@@ -103,14 +144,34 @@ Layoutfil.
             </div>
 
             <!-- Søkefelt, skjult på små skjermer med md:block, tilgjengelig via knapp nærmere tommel på alle-land -->
-            <div class="flex-1 max-w-md mx-4 hidden md:block">
-                <input
-                        type="text"
-                        placeholder={$lang === 'no' ? 'Søk etter land...' : 'Search for country...'}
-                        bind:value={$searchTerm}
-                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
-                />
-            </div>
+
+
+                <div class="flex-1 max-w-md mx-4 md:block relative hidden">
+                    <input
+                            type="text"
+                            bind:value={searchInput}
+                            placeholder={$lang === 'no' ? 'Søk etter land...' : 'Search for country...'}
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                    />
+
+                    {#if showDropdown}
+                        <div class="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-80 overflow-y-auto z-50">
+                            {#each searchResults as country}
+                                <button
+                                        on:click={() => selectCountry(country)}
+                                        class="w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-3"
+                                >
+                                    <img src={country.flags.svg} alt="" class="w-8 h-6 object-cover rounded" />
+                                    <span>{getCountryName(country)}</span>
+                                </button>
+                            {/each}
+                        </div>
+                    {/if}
+                </div>
+
+
+
+
 
             <!--Navbar-meny tilgjengelig på større skjerm ( i stedet for sideskuff) -->
             <div class="flex items-center gap-2">
