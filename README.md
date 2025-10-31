@@ -1,6 +1,6 @@
 # Landlosen
 
-![Jorda](./static/Jorda_1000samples.png)
+![Jorda](./static/Norway_Jorda_500samples_volume-scatter.png)
 
 __Image credits__:  
 [Texture image](https://visibleearth.nasa.gov/images/74518/december-blue-marble-next-generation-w-topography/74520l): _Reto Stöckli, NASA Earth Observatory_  
