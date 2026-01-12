@@ -9,7 +9,7 @@ __Image credits__:
 ## What is this
 ___Landlosen_ is a solution to the assignment for candidates for internship at [SmartGIS](https://smartgis.no).__
 
-It is not meant to be used as a stable source of information, but to be used as a basis for a technical interview for applicants to a job position.
+It is not meant to be used as a stable source of information, but to be used as a basis for a technical interview for applicants to a job position. It is a simple application to send GET requests about country information from the RestCountries API, with a focus on the front-end.
 
 ## What does Landlosen mean?
 
