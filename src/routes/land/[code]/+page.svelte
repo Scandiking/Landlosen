@@ -10,6 +10,8 @@
     import { countryOfficialTranslations } from "$lib/translations/countries_official.ts";
     import {Progressbar} from "flowbite-svelte";
     import {sineOut} from "svelte/easing";
+    import { getCountryByCode } from "$lib/api/countries.ts";
+    import { describeLoadError } from "$lib/errors.ts";
 
     const lang = getContext<Writable<'no' | 'en'>>('lang');
 
@@ -44,19 +46,21 @@
     let loading = true;
     let error: string | null = null;
 
-    onMount(async () => {
+    async function loadCountry() {
+        loading = true;
+        error = null;
         try {
-            const code = $page.params.code;
-            const response = await fetch(`https://restcountries.com/v3.1/alpha/${code}`);
-            if (!response.ok) throw new Error($lang === 'no' ? 'Fant ikke landet' : 'Country not found');
-            const data = await response.json();
-            country = data[0];
-            loading = false;
+            country = await getCountryByCode($page.params.code);
+            if (!country) throw new Error('not_found');
         } catch (e) {
-            error = e instanceof Error ? e.message : 'Unknown error';
+            // Feilkode: 'rate_limit' | 'timeout' | 'network' | 'not_found' | 'http_<status>'
+            error = e instanceof Error ? e.message : 'network';
+        } finally {
             loading = false;
         }
-    });
+    }
+
+    onMount(loadCountry);
 
 
 
@@ -139,7 +143,14 @@
             <Progressbar labelOutside={$lang==='no' ? 'Laster land og strand...' : 'Discovering countries...'} animate precision={2} tweenDuration={1500} easing={sineOut}/>
         </div>
     {:else if error}
-        <p class="error">{error}</p>
+        {@const info = describeLoadError(error, $lang)}
+        <div class="error-box" role="alert">
+            <h2>{info.title}</h2>
+            <p>{info.message}</p>
+            <button class="retry-btn" on:click={loadCountry}>
+                {$lang === 'no' ? 'Prøv igjen' : 'Try again'}
+            </button>
+        </div>
     {:else if country}
 
         <div class="max-w-4xl mx-auto">
@@ -334,6 +345,57 @@
 
     :global(.dark) .error {
         color: #f87171;
+    }
+
+    .error-box {
+        max-width: 640px;
+        margin: 2rem auto;
+        padding: 2rem;
+        text-align: center;
+        background: #fef2f2;
+        border: 1px solid #fecaca;
+        border-radius: 12px;
+    }
+
+    :global(.dark) .error-box {
+        background: #2a1414;
+        border-color: #7f1d1d;
+    }
+
+    .error-box h2 {
+        font-size: 1.375rem;
+        font-weight: 600;
+        margin-bottom: 0.75rem;
+        color: #b91c1c;
+    }
+
+    :global(.dark) .error-box h2 {
+        color: #fca5a5;
+    }
+
+    .error-box p {
+        color: #4b5563;
+        line-height: 1.6;
+        margin-bottom: 1.5rem;
+    }
+
+    :global(.dark) .error-box p {
+        color: #d1d5db;
+    }
+
+    .retry-btn {
+        padding: 0.6rem 1.5rem;
+        background: #3b82f6;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+
+    .retry-btn:hover {
+        background: #2563eb;
     }
 </style>
 

@@ -16,6 +16,7 @@
     import { countryOfficialTranslations } from "$lib/translations/countries_official.ts";
     import { countryTranslations } from "$lib/translations/countries.ts";
     import { regionTranslations } from "$lib/translations/regions.ts";
+    import { describeLoadError } from "$lib/errors.ts";
 
     // Importere datatype Writable, for å lagre en/no i
     import type { Writable } from "svelte/store";
@@ -167,16 +168,21 @@
     $: searchFromUrl = $page.url.searchParams.get('search') || '';
 
     // Kjøre ved mount i DOM
-    onMount(async () => {
+    async function loadCountries() {
+        loading = true;
+        error = null;
         try {
             countries = await getAllCountries();
-            loading = false;
         } catch (e) {
             console.error('Kunne ikke laste land:', e);
-            error = e instanceof Error ? e.message : 'Ukjent feil';
+            // Lagrer feilkoden ('rate_limit' | 'timeout' | 'network' | 'http_<status>')
+            error = e instanceof Error ? e.message : 'network';
+        } finally {
             loading = false;
         }
-    });
+    }
+
+    onMount(loadCountries);
 
 
 
@@ -201,9 +207,14 @@
             <Progressbar labelOutside={$lang==='no' ? 'Laster land og strand...' : 'Discovering countries...'} animate precision={2} tweenDuration={1500} easing={sineOut}/>
         </div>
     {:else if error}
-        <Card class="text-center max-w-2xl mx-auto">
-            <p class="text-red-600 mb-4">Feil: {error}</p>
-            <Button href="/">← Tilbake til forsiden</Button>
+        {@const info = describeLoadError(error, $lang)}
+        <Card class="text-center max-w-2xl mx-auto" role="alert">
+            <h2 class="text-xl font-semibold text-red-700 dark:text-red-300 mb-2">{info.title}</h2>
+            <p class="text-gray-700 dark:text-gray-300 mb-6 leading-relaxed">{info.message}</p>
+            <div class="flex gap-3 justify-center">
+                <Button on:click={loadCountries}>{$lang === 'no' ? 'Prøv igjen' : 'Try again'}</Button>
+                <Button color="alternative" href="/">{$lang === 'no' ? '← Tilbake til forsiden' : '← Back to home'}</Button>
+            </div>
         </Card>
     {:else}
 

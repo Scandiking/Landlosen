@@ -33,13 +33,30 @@ Layoutfil.
 
     const lang = writable('no');
     const countriesStore = writable<Country[]>([]);
+    // Feilkode fra lasting (null = ingen feil). Sider leser denne for å vise feilmelding
+    // i stedet for evig "Laster..."-tilstand.
+    const loadError = writable<string | null>(null);
 
     setContext('lang', lang);
     setContext('countries', countriesStore);
+    setContext('loadError', loadError);
+    // Lar sider be om ny lasting (f.eks. via "Prøv igjen"-knapp).
+    setContext('retryLoad', loadCountries);
+
+    async function loadCountries() {
+        loadError.set(null);
+        try {
+            countries = await getAllCountries();
+            countriesStore.set(countries); // Rett variabel
+        } catch (e) {
+            console.error('Kunne ikke laste land:', e);
+            // Lagrer feilkoden ('rate_limit' | 'timeout' | 'network' | 'http_<status>')
+            loadError.set(e instanceof Error ? e.message : 'network');
+        }
+    }
 
     onMount(async () => {
-        countries = await getAllCountries();
-        countriesStore.set(countries); // Rett variabel
+        await loadCountries();
         theme.init();
 
         const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');

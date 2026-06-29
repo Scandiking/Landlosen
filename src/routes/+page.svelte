@@ -1,6 +1,7 @@
 <script lang="ts">
     import { getContext } from 'svelte';
     import { countryTranslations } from '$lib/translations/countries.ts';
+    import { describeLoadError } from '$lib/errors.ts';
     import { Progressbar } from "flowbite-svelte";
     import { sineOut } from "svelte/easing";
     import type { Writable } from 'svelte/store';
@@ -17,12 +18,16 @@
 
     const lang = getContext<Writable<'no' | 'en'>>('lang');
     const countries = getContext<Writable<Country[]>>('countries');
+    const loadError = getContext<Writable<string | null>>('loadError');
+    const retryLoad = getContext<() => Promise<void>>('retryLoad');
 
 
     let currentPage = 1;
     let itemsPerPage = 20;
 
-    $: loading = $countries.length === 0;
+    // Laster så lenge listen er tom og ingen feil er oppstått.
+    $: loading = $countries.length === 0 && !$loadError;
+    $: errorInfo = $loadError ? describeLoadError($loadError, $lang) : null;
     $: filteredCountries = $countries; // Vis alle land
     $: totalPages = Math.ceil(filteredCountries.length / itemsPerPage);
     $: paginatedCountries = filteredCountries.slice(
@@ -56,6 +61,15 @@
     {#if loading}
         <div class="text-center py-16">
             <Progressbar labelOutside={$lang==='no' ? 'Laster land og strand...' : 'Discovering countries...'} animate precision={2} tweenDuration={1500} easing={sineOut}/>
+        </div>
+
+    {:else if errorInfo}
+        <div class="error-box" role="alert">
+            <h2>{errorInfo.title}</h2>
+            <p>{errorInfo.message}</p>
+            <button class="retry-btn" on:click={() => retryLoad()}>
+                {$lang === 'no' ? 'Prøv igjen' : 'Try again'}
+            </button>
         </div>
 
     {:else}
@@ -261,6 +275,57 @@
 
     :global(.dark) .error {
         color: #f87171;
+    }
+
+    .error-box {
+        max-width: 640px;
+        margin: 4rem auto;
+        padding: 2rem;
+        text-align: center;
+        background: #fef2f2;
+        border: 1px solid #fecaca;
+        border-radius: 12px;
+    }
+
+    :global(.dark) .error-box {
+        background: #2a1414;
+        border-color: #7f1d1d;
+    }
+
+    .error-box h2 {
+        font-size: 1.375rem;
+        font-weight: 600;
+        margin-bottom: 0.75rem;
+        color: #b91c1c;
+    }
+
+    :global(.dark) .error-box h2 {
+        color: #fca5a5;
+    }
+
+    .error-box p {
+        color: #4b5563;
+        line-height: 1.6;
+        margin-bottom: 1.5rem;
+    }
+
+    :global(.dark) .error-box p {
+        color: #d1d5db;
+    }
+
+    .retry-btn {
+        padding: 0.6rem 1.5rem;
+        background: #3b82f6;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+
+    .retry-btn:hover {
+        background: #2563eb;
     }
 
 
